@@ -165,19 +165,24 @@ const EditProfile = () => {
             const hasBoost = socialAndPricing.boostPrice !== '' && socialAndPricing.boostPrice !== null
             const hasOriginalFile = socialAndPricing.originalFilePrice !== '' && socialAndPricing.originalFilePrice !== null
 
-            formData.append('allow_boost', hasBoost)
+            formData.append('allow_boost', hasBoost ? 'true' : 'false')
             if (hasBoost) {
                 formData.append('boost_price', socialAndPricing.boostPrice)
             }
 
-            formData.append('allow_original_file', hasOriginalFile)
+            formData.append('allow_original_file', hasOriginalFile ? 'true' : 'false')
             if (hasOriginalFile) {
                 formData.append('original_file_price', socialAndPricing.originalFilePrice)
             }
 
             // New Work Preferences
-            formData.append('accept_gifted_video', socialAndPricing.acceptGiftedVideo)
-            formData.append('accept_affiliate', socialAndPricing.acceptAffiliate)
+            formData.append('accept_gifted_video', socialAndPricing.acceptGiftedVideo ? 'true' : 'false')
+            formData.append('accept_affiliate', socialAndPricing.acceptAffiliate ? 'true' : 'false')
+
+            // Social Accounts (Batch Save)
+            if (socialAndPricing.socialAccounts && socialAndPricing.socialAccounts.length > 0) {
+                formData.append('social_accounts', JSON.stringify(socialAndPricing.socialAccounts))
+            }
 
             // Personal info
             formData.append('full_name_th', finalData.fullNameTh)

@@ -66,9 +66,9 @@ class UserWithProfileSerializer(serializers.ModelSerializer):
                 'zipcode': p.zipcode,
                 # Work conditions
                 'allow_boost': p.allow_boost,
-                'boost_price': str(p.boost_price) if p.boost_price else None,
+                'boost_price': str(p.boost_price) if p.boost_price is not None else None,
                 'allow_original_file': p.allow_original_file,
-                'original_file_price': str(p.original_file_price) if p.original_file_price else None,
+                'original_file_price': str(p.original_file_price) if p.original_file_price is not None else None,
                 'accept_gifted_video': p.accept_gifted_video,
                 'accept_affiliate': p.accept_affiliate,
                 # Interests
@@ -395,9 +395,9 @@ class InfluencerApprovalSerializer(serializers.ModelSerializer):
                 'zipcode': p.zipcode,
                 'full_address': p.full_address,
                 'allow_boost': p.allow_boost,
-                'boost_price': str(p.boost_price) if p.boost_price else None,
+                'boost_price': str(p.boost_price) if p.boost_price is not None else None,
                 'allow_original_file': p.allow_original_file,
-                'original_file_price': str(p.original_file_price) if p.original_file_price else None,
+                'original_file_price': str(p.original_file_price) if p.original_file_price is not None else None,
                 'accept_gifted_video': p.accept_gifted_video,
                 'accept_affiliate': p.accept_affiliate,
                 'interests': InterestSerializer(p.interests.all(), many=True).data,

@@ -641,7 +641,7 @@ const StepSocialAndPricing = ({ data, onChange, onNext, onBack }) => {
                                         type="number"
                                         placeholder="0.00"
                                         className="w-full bg-white/80 backdrop-blur border-2 border-gray-100 focus:border-primary-400 focus:bg-white rounded-2xl py-4 px-10 text-xl font-black text-gray-800 placeholder:text-gray-300 outline-none transition-all shadow-inner"
-                                        value={boostPrice || ''}
+                                        value={boostPrice === null || boostPrice === undefined ? '' : boostPrice}
                                         onChange={e => {
                                             const val = e.target.value
                                             onChange({
@@ -673,7 +673,7 @@ const StepSocialAndPricing = ({ data, onChange, onNext, onBack }) => {
                                         type="number"
                                         placeholder="0.00"
                                         className="w-full bg-white/80 backdrop-blur border-2 border-gray-100 focus:border-primary-400 focus:bg-white rounded-2xl py-4 px-10 text-xl font-black text-gray-800 placeholder:text-gray-300 outline-none transition-all shadow-inner"
-                                        value={originalFilePrice || ''}
+                                        value={originalFilePrice === null || originalFilePrice === undefined ? '' : originalFilePrice}
                                         onChange={e => {
                                             const val = e.target.value
                                             onChange({

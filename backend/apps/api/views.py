@@ -544,6 +544,7 @@ class ProfileUpdateView(APIView):
     """Update user profile."""
     
     permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
     
     @transaction.atomic
     def put(self, request):
@@ -606,6 +607,11 @@ class ProfileUpdateView(APIView):
         if 'original_file_price' in data:
             original_file_price = data.get('original_file_price')
             profile.original_file_price = float(original_file_price) if original_file_price else None
+        
+        if 'accept_gifted_video' in data:
+            profile.accept_gifted_video = parse_bool(data.get('accept_gifted_video', False))
+        if 'accept_affiliate' in data:
+            profile.accept_affiliate = parse_bool(data.get('accept_affiliate', False))
         
         # Handle file uploads (if provided)
         if 'id_card_front' in request.FILES:
