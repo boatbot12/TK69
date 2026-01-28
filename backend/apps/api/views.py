@@ -586,31 +586,34 @@ class ProfileUpdateView(APIView):
         profile = serializer.save()
         
         # SUPER DEFENSIVE FALLBACK: Explicitly set pricing fields if they are in data
-        # This bypasses any potential serializer-level filtering/parsing issues
         def force_price(val):
              if val is None or str(val).strip() == '': return None
              try:
-                 return Decimal(str(val))
-             except:
+                 # Remove commas and whitespace
+                 clean_val = str(val).replace(',', '').strip()
+                 return Decimal(clean_val)
+             except Exception as e:
+                 print(f"[ProfileUpdate] Price parse error for '{val}': {e}")
                  return None
 
         # Manual overrides to be 101% sure
-        print(f"[ProfileUpdate] DEFENSIVE: Raw data boost={request.data.get('boost_price')}")
+        print(f"[ProfileUpdate] RECEIVING: boost_price={request.data.get('boost_price')}, original={request.data.get('original_file_price')}")
+        
         if 'boost_price' in request.data:
             profile.boost_price = force_price(request.data.get('boost_price'))
-            # Force allow_boost if price is set
             if profile.boost_price is not None:
                  profile.allow_boost = True
-        
+                 print(f"[ProfileUpdate] SET boost_price={profile.boost_price}, allow=True")
+
         if 'original_file_price' in request.data:
             profile.original_file_price = force_price(request.data.get('original_file_price'))
-            # Force flag if price is set
             if profile.original_file_price is not None:
                  profile.allow_original_file = True
+                 print(f"[ProfileUpdate] SET original_file_price={profile.original_file_price}, allow=True")
 
         profile.save()
         profile.refresh_from_db()
-        print(f"[ProfileUpdate] POST-SAVE: DB boost={profile.boost_price}, allow={profile.allow_boost}")
+        print(f"[ProfileUpdate] FINAL DB STATE: boost={profile.boost_price} ({type(profile.boost_price)}), allow={profile.allow_boost}")
 
         # Handle Interests (from serializer validated_data or request.data)
         interests_data = request.data.get('interests')
@@ -672,6 +675,18 @@ class ProfileUpdateView(APIView):
             'user': UserWithProfileSerializer(request.user, context={'request': request}).data
         })
 
+
+class ProfileDebugView(APIView):
+    """Temporary endpoint to check DB state."""
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        p = request.user.profile
+        return Response({
+            'allow_boost': p.allow_boost,
+            'boost_price': str(p.boost_price),
+            'allow_original_file': p.allow_original_file,
+            'original_file_price': str(p.original_file_price)
+        })
 
 class CampaignListView(ListAPIView):
     """

@@ -468,23 +468,47 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         }
 
     def to_internal_value(self, data):
-        """Pre-process data for boolean strings and pricing logic."""
-        ret = super().to_internal_value(data)
+        """Pre-process data for boolean strings, pricing logic, and JSON fields."""
+        # Handle JSON strings from multipart
+        import json
+        mutable_data = data.copy() if hasattr(data, 'copy') else data.dict().copy() if hasattr(data, 'dict') else dict(data)
+        
+        for field in ['interests', 'social_accounts']:
+            if field in mutable_data and isinstance(mutable_data[field], str):
+                try:
+                    mutable_data[field] = json.loads(mutable_data[field])
+                except:
+                    pass
+        
+        ret = super().to_internal_value(mutable_data)
         
         # Helper for multipart booleans
         def force_bool(val):
+            if val is None: return False
             if isinstance(val, bool): return val
             if isinstance(val, str): return val.lower() in ('true', '1', 'yes')
             return bool(val)
 
-        # Force allow flags if price is provided
-        if force_bool(data.get('allow_boost')) or (ret.get('boost_price') and ret.get('boost_price') > 0):
-            ret['allow_boost'] = True
-        
-        if force_bool(data.get('allow_original_file')) or (ret.get('original_file_price') and ret.get('original_file_price') > 0):
-            ret['allow_original_file'] = True
-            
-        print(f"[ProfileUpdateSerializer] Processed flags: boost={ret.get('allow_boost')}, original={ret.get('allow_original_file')}")
+        # Force allow flags if price is provided (defensive logic)
+        # We check the raw data because 'ret' might have stripped them if validation failed
+        raw_boost_price = mutable_data.get('boost_price')
+        if raw_boost_price and str(raw_boost_price).strip() != '':
+             try:
+                 price_val = Decimal(str(raw_boost_price))
+                 if price_val > 0:
+                     ret['allow_boost'] = True
+             except:
+                 pass
+                 
+        raw_orig_price = mutable_data.get('original_file_price')
+        if raw_orig_price and str(raw_orig_price).strip() != '':
+            try:
+                price_val = Decimal(str(raw_orig_price))
+                if price_val > 0:
+                    ret['allow_original_file'] = True
+            except:
+                pass
+
         return ret
 
     def update(self, instance, validated_data):
