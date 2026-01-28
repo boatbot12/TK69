@@ -209,8 +209,18 @@ const EditProfile = () => {
                 formData.append('bank_book', finalData.files.bankBook)
             }
 
-            await profileAPI.update(formData)
+            console.log('[EditProfile] Submitting Profile Update...')
+            const response = await profileAPI.update(formData)
+            console.log('[EditProfile] Update response:', response.data)
+
             await refreshUser()
+
+            // Temporary alert to confirm success and show debug info to the user
+            if (response.data.debug_info) {
+                const info = response.data.debug_info
+                console.log(`[EditProfile] Saved state: Boost=${info.allow_boost} (${info.boost_price}), Original=${info.allow_original_file} (${info.original_file_price})`)
+            }
+
             navigate('/profile', { replace: true })
 
         } catch (error) {

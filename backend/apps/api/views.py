@@ -19,6 +19,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 import logging
 import threading
+from decimal import Decimal
 from apps.api.services.gemini import GeminiService
 
 logger = logging.getLogger(__name__)
@@ -556,21 +557,11 @@ class ProfileUpdateView(APIView):
             )
         
         profile = request.user.profile
-        
-        # Robust Data Extraction
-        if hasattr(request.data, 'getlist'):
-            # Use a dict but manually extract lists that we care about
-            data = request.data.dict()
-            if 'interests' in request.data:
-                data['interests'] = request.data.get('interests')
-            if 'social_accounts' in request.data:
-                data['social_accounts'] = request.data.get('social_accounts')
-        else:
-            data = request.data
+        data = request.data
             
         print(f"[ProfileUpdate] User: {request.user.id}, Method: {request.method}")
-        print(f"[ProfileUpdate] Received keys: {list(data.keys())}")
-        print(f"[ProfileUpdate] allow_boost: {data.get('allow_boost')}, boost_price: {data.get('boost_price')}")
+        print(f"[ProfileUpdate] allow_boost in data: {'allow_boost' in data}")
+        print(f"[ProfileUpdate] boost_price in data: {'boost_price' in data}")
         
         # Helper to parse boolean from string
         def parse_bool(value):
@@ -613,29 +604,33 @@ class ProfileUpdateView(APIView):
         
         # Update work conditions (parse booleans and decimals)
         if 'allow_boost' in data:
-            profile.allow_boost = parse_bool(data.get('allow_boost', False))
+            profile.allow_boost = parse_bool(data.get('allow_boost'))
+            print(f"[ProfileUpdate] Updated allow_boost to: {profile.allow_boost}")
         
-        boost_price_raw = data.get('boost_price')
-        if boost_price_raw is not None:
-             try:
-                 profile.boost_price = float(boost_price_raw) if str(boost_price_raw).strip() != '' else None
-             except (ValueError, TypeError):
-                 pass
+        if 'boost_price' in data:
+            val = data.get('boost_price')
+            try:
+                profile.boost_price = Decimal(str(val)) if str(val).strip() != '' else None
+                print(f"[ProfileUpdate] Updated boost_price to: {profile.boost_price}")
+            except:
+                print(f"[ProfileUpdate] FAILED to update boost_price with value: {val}")
 
         if 'allow_original_file' in data:
-            profile.allow_original_file = parse_bool(data.get('allow_original_file', False))
+            profile.allow_original_file = parse_bool(data.get('allow_original_file'))
+            print(f"[ProfileUpdate] Updated allow_original_file to: {profile.allow_original_file}")
             
-        original_price_raw = data.get('original_file_price')
-        if original_price_raw is not None:
+        if 'original_file_price' in data:
+            val = data.get('original_file_price')
             try:
-                profile.original_file_price = float(original_price_raw) if str(original_price_raw).strip() != '' else None
-            except (ValueError, TypeError):
-                pass
+                profile.original_file_price = Decimal(str(val)) if str(val).strip() != '' else None
+                print(f"[ProfileUpdate] Updated original_file_price to: {profile.original_file_price}")
+            except:
+                print(f"[ProfileUpdate] FAILED to update original_file_price with value: {val}")
         
         if 'accept_gifted_video' in data:
-            profile.accept_gifted_video = parse_bool(data.get('accept_gifted_video', False))
+            profile.accept_gifted_video = parse_bool(data.get('accept_gifted_video'))
         if 'accept_affiliate' in data:
-            profile.accept_affiliate = parse_bool(data.get('accept_affiliate', False))
+            profile.accept_affiliate = parse_bool(data.get('accept_affiliate'))
         
         # Validate that ID Card and Bank Book are present (mandatory)
         # Check files in request or existing on profile
