@@ -209,19 +209,29 @@ const EditProfile = () => {
                 formData.append('bank_book', finalData.files.bankBook)
             }
 
-            console.log('[EditProfile] Submitting Profile Update...')
+            // Log for inspection
+            console.log('[EditProfile] Final Social & Pricing State:', socialAndPricing)
+            console.log('[EditProfile] Submitting Profile Update with FormData:')
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+
             const response = await profileAPI.update(formData)
             console.log('[EditProfile] Update response:', response.data)
 
             await refreshUser()
 
-            // Temporary alert to confirm success and show debug info to the user
+            // Explicit confirmation to the user
             if (response.data.debug_info) {
                 const info = response.data.debug_info
-                console.log(`[EditProfile] Saved state: Boost=${info.allow_boost} (${info.boost_price}), Original=${info.allow_original_file} (${info.original_file_price})`)
+                const msg = `บันทึกสำเร็จ!\n- ค่า Boost: ฿${info.boost_price}\n- ค่าไฟล์: ฿${info.original_file_price}`
+                alert(msg)
             }
 
-            navigate('/profile', { replace: true })
+            // Brief delay to ensure state propagates
+            setTimeout(() => {
+                navigate('/profile', { replace: true })
+            }, 500)
 
         } catch (error) {
             console.error('[EditProfile] Submit error:', error)

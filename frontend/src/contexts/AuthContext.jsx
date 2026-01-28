@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
             if (token) {
                 try {
                     console.log('[Auth] Phase 1: Checking local session...')
-                    const response = await api.get('/auth/me/')
+                    const response = await authAPI.getCurrentUser()
                     setUser(response.data)
                     console.log('[Auth] Phase 1: Session valid, user restored.')
                     setIsLoading(false)
@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }) => {
 
     const refreshUser = useCallback(async () => {
         try {
-            const response = await api.get('/auth/me/')
+            const response = await authAPI.getCurrentUser()
             setUser(response.data)
             return response.data
         } catch (err) {
