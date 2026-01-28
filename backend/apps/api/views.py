@@ -614,14 +614,23 @@ class ProfileUpdateView(APIView):
         # Update work conditions (parse booleans and decimals)
         if 'allow_boost' in data:
             profile.allow_boost = parse_bool(data.get('allow_boost', False))
-        if 'boost_price' in data:
-            boost_price = data.get('boost_price')
-            profile.boost_price = float(boost_price) if boost_price else None
+        
+        boost_price_raw = data.get('boost_price')
+        if boost_price_raw is not None:
+             try:
+                 profile.boost_price = float(boost_price_raw) if str(boost_price_raw).strip() != '' else None
+             except (ValueError, TypeError):
+                 pass
+
         if 'allow_original_file' in data:
             profile.allow_original_file = parse_bool(data.get('allow_original_file', False))
-        if 'original_file_price' in data:
-            original_file_price = data.get('original_file_price')
-            profile.original_file_price = float(original_file_price) if original_file_price else None
+            
+        original_price_raw = data.get('original_file_price')
+        if original_price_raw is not None:
+            try:
+                profile.original_file_price = float(original_price_raw) if str(original_price_raw).strip() != '' else None
+            except (ValueError, TypeError):
+                pass
         
         if 'accept_gifted_video' in data:
             profile.accept_gifted_video = parse_bool(data.get('accept_gifted_video', False))
