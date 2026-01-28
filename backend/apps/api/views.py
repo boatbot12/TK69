@@ -584,7 +584,33 @@ class ProfileUpdateView(APIView):
 
         # Save profile
         profile = serializer.save()
+        
+        # SUPER DEFENSIVE FALLBACK: Explicitly set pricing fields if they are in data
+        # This bypasses any potential serializer-level filtering/parsing issues
+        def force_price(val):
+             if val is None or str(val).strip() == '': return None
+             try:
+                 return Decimal(str(val))
+             except:
+                 return None
+
+        # Manual overrides to be 101% sure
+        print(f"[ProfileUpdate] DEFENSIVE: Raw data boost={request.data.get('boost_price')}")
+        if 'boost_price' in request.data:
+            profile.boost_price = force_price(request.data.get('boost_price'))
+            # Force allow_boost if price is set
+            if profile.boost_price is not None:
+                 profile.allow_boost = True
+        
+        if 'original_file_price' in request.data:
+            profile.original_file_price = force_price(request.data.get('original_file_price'))
+            # Force flag if price is set
+            if profile.original_file_price is not None:
+                 profile.allow_original_file = True
+
+        profile.save()
         profile.refresh_from_db()
+        print(f"[ProfileUpdate] POST-SAVE: DB boost={profile.boost_price}, allow={profile.allow_boost}")
 
         # Handle Interests (from serializer validated_data or request.data)
         interests_data = request.data.get('interests')

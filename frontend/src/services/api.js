@@ -46,7 +46,7 @@ export default api
 // API functions
 export const authAPI = {
     lineLogin: (data) => api.post('/auth/line-login/', data),
-    getCurrentUser: () => api.get('/auth/me/')
+    getCurrentUser: () => api.get(`/auth/me/?_t=${Date.now()}`)
 }
 
 export const registerAPI = {
