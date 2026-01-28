@@ -57,7 +57,7 @@ export const registerAPI = {
 }
 
 export const profileAPI = {
-    update: (formData) => api.put('/profile/update/', formData, {
+    update: (formData) => api.post('/profile/update/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     })
 }

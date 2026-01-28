@@ -467,6 +467,26 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             'bank_book': {'required': False},
         }
 
+    def to_internal_value(self, data):
+        """Pre-process data for boolean strings and pricing logic."""
+        ret = super().to_internal_value(data)
+        
+        # Helper for multipart booleans
+        def force_bool(val):
+            if isinstance(val, bool): return val
+            if isinstance(val, str): return val.lower() in ('true', '1', 'yes')
+            return bool(val)
+
+        # Force allow flags if price is provided
+        if force_bool(data.get('allow_boost')) or (ret.get('boost_price') and ret.get('boost_price') > 0):
+            ret['allow_boost'] = True
+        
+        if force_bool(data.get('allow_original_file')) or (ret.get('original_file_price') and ret.get('original_file_price') > 0):
+            ret['allow_original_file'] = True
+            
+        print(f"[ProfileUpdateSerializer] Processed flags: boost={ret.get('allow_boost')}, original={ret.get('allow_original_file')}")
+        return ret
+
     def update(self, instance, validated_data):
         # We handle interests and social_accounts in the view for now 
         # to match existing complex logic, but we could move it here later.
