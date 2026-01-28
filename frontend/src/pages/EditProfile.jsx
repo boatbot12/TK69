@@ -234,7 +234,21 @@ const EditProfile = () => {
                     accept_gifted_video: socialAndPricing.acceptGiftedVideo,
                     accept_affiliate: socialAndPricing.acceptAffiliate,
                     social_accounts: socialAndPricing.socialAccounts,
-                    ...finalData
+                    // Map personal info
+                    full_name_th: finalData.fullNameTh,
+                    phone: finalData.phone.replace(/-/g, ''),
+                    email: finalData.email,
+                    date_of_birth: finalData.dateOfBirth,
+                    // Map address
+                    house_no: finalData.houseNo,
+                    village: finalData.village,
+                    moo: finalData.moo,
+                    soi: finalData.soi,
+                    road: finalData.road,
+                    sub_district: finalData.subDistrict,
+                    district: finalData.district,
+                    province: finalData.province,
+                    zipcode: finalData.zipcode
                 }
                 response = await profileAPI.jsonUpdate(payload)
             }
