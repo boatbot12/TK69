@@ -256,13 +256,6 @@ const EditProfile = () => {
 
             await refreshUser()
 
-            // Explicit confirmation to the user
-            if (response.data.debug_info) {
-                const info = response.data.debug_info
-                const msg = `บันทึกสำเร็จ!\n- ค่า Boost: ฿${info.boost_price}\n- ค่าไฟล์: ฿${info.original_file_price}`
-                alert(msg)
-            }
-
             // Brief delay to ensure state propagates
             setTimeout(() => {
                 navigate('/profile', { replace: true })

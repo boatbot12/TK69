@@ -597,27 +597,22 @@ class ProfileUpdateView(APIView):
                  clean_val = str(val).replace(',', '').strip()
                  return Decimal(clean_val)
              except Exception as e:
-                 print(f"[ProfileUpdate] Price parse error for '{val}': {e}")
                  return None
 
         # Manual overrides to be 101% sure
-        print(f"[ProfileUpdate] RECEIVING: boost_price={request.data.get('boost_price')}, original={request.data.get('original_file_price')}")
         
         if 'boost_price' in request.data:
             profile.boost_price = force_price(request.data.get('boost_price'))
             if profile.boost_price is not None:
                  profile.allow_boost = True
-                 print(f"[ProfileUpdate] SET boost_price={profile.boost_price}, allow=True")
 
         if 'original_file_price' in request.data:
             profile.original_file_price = force_price(request.data.get('original_file_price'))
             if profile.original_file_price is not None:
                  profile.allow_original_file = True
-                 print(f"[ProfileUpdate] SET original_file_price={profile.original_file_price}, allow=True")
 
         profile.save()
         profile.refresh_from_db()
-        print(f"[ProfileUpdate] FINAL DB STATE: boost={profile.boost_price} ({type(profile.boost_price)}), allow={profile.allow_boost}")
 
         # Handle Interests (from serializer validated_data or request.data)
         interests_data = request.data.get('interests')
@@ -680,18 +675,6 @@ class ProfileUpdateView(APIView):
             'user': UserWithProfileSerializer(fresh_user, context={'request': request}).data
         })
 
-
-class ProfileDebugView(APIView):
-    """Temporary endpoint to check DB state."""
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        p = request.user.profile
-        return Response({
-            'allow_boost': p.allow_boost,
-            'boost_price': str(p.boost_price),
-            'allow_original_file': p.allow_original_file,
-            'original_file_price': str(p.original_file_price)
-        })
 
 class CampaignListView(ListAPIView):
     """

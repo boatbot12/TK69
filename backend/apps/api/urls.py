@@ -17,7 +17,6 @@ urlpatterns = [
     
     # Profile
     path('profile/update/', views.ProfileUpdateView.as_view(), name='profile-update'),
-    path('profile/debug/', views.ProfileDebugView.as_view(), name='profile-debug'),
     
     # Campaigns
     path('campaigns/', views.CampaignListView.as_view(), name='campaign-list'),
