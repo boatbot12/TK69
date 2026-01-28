@@ -3,6 +3,7 @@ API Serializers
 """
 
 from rest_framework import serializers
+from decimal import Decimal
 from apps.users.models import User
 from apps.influencers.models import Interest, InfluencerProfile, SocialPlatformAccount, BlacklistedInfluencer
 from apps.campaigns.models import Campaign, CampaignApplication

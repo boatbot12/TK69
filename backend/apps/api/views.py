@@ -666,7 +666,8 @@ class ProfileUpdateView(APIView):
             except Exception as e:
                 print(f"[ProfileUpdate] Social error: {e}")
 
-        request.user.refresh_from_db()
+        # RE-FETCH USER TO ENSURE LATEST DATA SERIALIZATION
+        fresh_user = User.objects.get(id=request.user.id)
         return Response({
             'success': True,
             'message': 'Profile updated successfully',
@@ -676,7 +677,7 @@ class ProfileUpdateView(APIView):
                 'allow_original_file': profile.allow_original_file,
                 'original_file_price': str(profile.original_file_price)
             },
-            'user': UserWithProfileSerializer(request.user, context={'request': request}).data
+            'user': UserWithProfileSerializer(fresh_user, context={'request': request}).data
         })
 
 
