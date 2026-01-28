@@ -216,7 +216,28 @@ const EditProfile = () => {
                 console.log(pair[0] + ': ' + pair[1]);
             }
 
-            const response = await profileAPI.update(formData)
+            // NEW: Use JSON if no files are being uploaded for maximum reliability!
+            const hasNewFiles = files.idCardFront || files.bankBook
+            let response;
+
+            if (hasNewFiles) {
+                console.log('[EditProfile] Submitting via FormData (Files detected)')
+                response = await profileAPI.update(formData)
+            } else {
+                console.log('[EditProfile] Submitting via JSON (No files)')
+                const payload = {
+                    interests,
+                    allow_boost: hasBoost,
+                    boost_price: socialAndPricing.boostPrice,
+                    allow_original_file: hasOriginalFile,
+                    original_file_price: socialAndPricing.originalFilePrice,
+                    accept_gifted_video: socialAndPricing.acceptGiftedVideo,
+                    accept_affiliate: socialAndPricing.acceptAffiliate,
+                    social_accounts: socialAndPricing.socialAccounts,
+                    ...finalData
+                }
+                response = await profileAPI.jsonUpdate(payload)
+            }
             console.log('[EditProfile] Update response:', response.data)
 
             await refreshUser()

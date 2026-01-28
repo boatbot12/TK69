@@ -541,11 +541,12 @@ class RegistrationSubmitView(APIView):
         return True
 
 
+from rest_framework.parsers import JSONParser
+
 class ProfileUpdateView(APIView):
-    """Update user profile."""
-    
+    """Update user profile personal info and work conditions."""
     permission_classes = [IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
     
     @transaction.atomic
     def post(self, request):
@@ -553,6 +554,9 @@ class ProfileUpdateView(APIView):
 
     @transaction.atomic
     def put(self, request):
+        print(f"[ProfileUpdate] Content-Type: {request.content_type}")
+        print(f"[ProfileUpdate] RAW DATA: {request.data}")
+        
         if not hasattr(request.user, 'profile'):
             return Response(
                 {'error': 'no_profile', 'message': 'Profile not found'},
