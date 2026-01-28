@@ -124,9 +124,9 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Media files
-MEDIA_URL = 'media/'
+# Media files (Default - will be overridden if using GCS)
 MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = 'media/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -198,6 +198,7 @@ if GS_BUCKET_NAME:
     GS_PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT')
     GS_QUERYSTRING_AUTH = False  # Make files public by default
     GS_FILE_OVERWRITE = False
+    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
