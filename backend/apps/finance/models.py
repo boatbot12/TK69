@@ -201,6 +201,12 @@ class Settlement(models.Model):
         blank=True,
         verbose_name='หมายเหตุ'
     )
+    slip_image = models.ImageField(
+        upload_to='revenue_settlements/',
+        null=True,
+        blank=True,
+        verbose_name='หลักฐานการโอน'
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='สร้างเมื่อ'

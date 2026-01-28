@@ -411,13 +411,24 @@ class InternalRevenueView(APIView):
                 if not unclaimed.exists():
                      return Response({'error': 'No revenue to settle'}, status=status.HTTP_400_BAD_REQUEST)
                      
-                total_amount = sum(r.platform_fee for r in unclaimed)
+                # Use user provided amount or sum all
+                input_amount = request.data.get('amount')
+                slip_image = request.FILES.get('slip_image')
+                
+                if input_amount:
+                    try:
+                        total_amount = Decimal(str(input_amount))
+                    except:
+                        total_amount = sum(r.platform_fee for r in unclaimed)
+                else:
+                    total_amount = sum(r.platform_fee for r in unclaimed)
                 
                 # Create Settlement Record
                 settlement = Settlement.objects.create(
                     total_amount=total_amount,
                     created_by=request.user,
-                    note=request.data.get('note', '')
+                    note=request.data.get('note', ''),
+                    slip_image=slip_image
                 )
                 
                 # Update Revenues to link to this settlement

@@ -40,17 +40,50 @@ const InternalRevenueTab = () => {
         loadData();
     }, [loadData]);
 
+    const [settleAmount, setSettleAmount] = useState('');
+    const [slipFile, setSlipFile] = useState(null);
+
+    useEffect(() => {
+        if (showSettleModal) {
+            setSettleAmount(availableRevenue.toString());
+            setSlipFile(null);
+        }
+    }, [showSettleModal, availableRevenue]);
+
     const handleSettle = async () => {
         if (!settleNote.trim()) {
             if (!confirm('ยืนยันการชำระค่าธรรมเนียมโดยไม่มีหมายเหตุ?')) return;
         }
 
+        if (!slipFile) {
+            toastError('กรุณาอัพโหลดหลักฐานการโอน (Slip)');
+            return;
+        }
+
         try {
             setIsSettling(true);
+
+            // Compress image if needed (basic check > 1MB or just always compress)
+            let fileToUpload = slipFile;
+            if (slipFile.size > 1024 * 1024) { // > 1MB
+                try {
+                    fileToUpload = await compressImage(slipFile);
+                } catch (e) {
+                    console.error("Compression failed, sending original", e);
+                }
+            }
+
+            const formData = new FormData();
+            formData.append('amount', settleAmount);
+            formData.append('note', settleNote);
+            formData.append('slip_image', fileToUpload);
+
             const res = await fetch(`${API_BASE}/admin/finance/internal-revenue/settle/`, {
                 method: 'POST',
-                headers: getHeaders(),
-                body: JSON.stringify({ note: settleNote })
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
             });
 
             if (!res.ok) {
@@ -62,6 +95,7 @@ const InternalRevenueTab = () => {
             await loadData(); // Reload data
             setShowSettleModal(false);
             setSettleNote('');
+            setSlipFile(null);
             success('บันทึกการชำระค่าธรรมเนียมสำเร็จเรียบร้อยแล้ว');
         } catch (err) {
             toastError(`Error: ${err.message}`);
@@ -78,6 +112,31 @@ const InternalRevenueTab = () => {
 
     return (
         <div className="space-y-6">
+            {/* Payment Instructions */}
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 shadow-sm">
+                <h3 className="text-blue-800 font-bold mb-3 flex items-center gap-2">
+                    📢 ช่องทางการชำระเงิน (Admin Payment Channels)
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">ปกติ (Personal)</span>
+                        </div>
+                        <p className="font-bold text-gray-800">กสิกรไทย (KBANK)</p>
+                        <p className="text-xl font-mono font-bold text-blue-600 tracking-wider">033-1-48106-8</p>
+                        <p className="text-gray-600">ธนภัทร ศรีอุทารวงศ์</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold">VAT 7% (Company)</span>
+                        </div>
+                        <p className="font-bold text-gray-800">กสิกรไทย (KBANK)</p>
+                        <p className="text-xl font-mono font-bold text-blue-600 tracking-wider">124-3-84309-6</p>
+                        <p className="text-gray-600">บริษัท เมลิรร์โร จำกัด</p>
+                    </div>
+                </div>
+            </div>
+
             {/* Header / Stats Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex justify-between items-start md:items-center flex-col md:flex-row gap-4">
@@ -145,7 +204,10 @@ const InternalRevenueTab = () => {
                                     วันที่ชำระ
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    ยอดเงิน
+                                    ยอดทึ่ชำระจริง
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    หลักฐาน
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     ผู้ดำเนินการ
@@ -174,6 +236,10 @@ const InternalRevenueTab = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">
                                             ฿{parseFloat(item.amount).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {/* Link to slip logic would go here if URL was in API, currently history API needs update to return slip URL, keeping simple for now */}
+                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">Slip</span>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {item.created_by}
                                         </td>
@@ -190,7 +256,7 @@ const InternalRevenueTab = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-400 text-sm">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-400 text-sm">
                                         ยังไม่มีประวัติการชำระเงิน
                                     </td>
                                 </tr>
@@ -219,23 +285,63 @@ const InternalRevenueTab = () => {
                                             ยืนยันการชำระค่าธรรมเนียม
                                         </h3>
                                         <div className="mt-2">
-                                            <p className="text-sm text-gray-500">
-                                                คุณต้องการบันทึกการชำระค่า Platform Fee จำนวน <span className="font-bold text-indigo-600">฿{availableRevenue.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span> ใช่หรือไม่?
-                                                การดำเนินการนี้จะบันทึกว่าได้ทำการโอนเงินให้กับผู้พัฒนาระบบเรียบร้อยแล้ว
+                                            <p className="text-sm text-gray-500 mb-4">
+                                                กรุณาตรวจสอบยอดเงินและแนบหลักฐานการโอน
                                             </p>
-                                        </div>
-                                        <div className="mt-4">
-                                            <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">
-                                                หมายเหตุ (ถ้ามี)
-                                            </label>
-                                            <textarea
-                                                id="note"
-                                                rows="3"
-                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
-                                                placeholder="เช่น โอนเข้าบัญชีบริษัท XXX..."
-                                                value={settleNote}
-                                                onChange={(e) => setSettleNote(e.target.value)}
-                                            ></textarea>
+
+                                            {/* Amount Input */}
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    ยอดเงินที่โอน (บาท) <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={settleAmount}
+                                                    onChange={(e) => setSettleAmount(e.target.value)}
+                                                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 font-mono text-lg"
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+
+                                            {/* Slip Upload */}
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    หลักฐานการโอน (Slip) <span className="text-red-500">*</span>
+                                                </label>
+                                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setSlipFile(e.target.files[0])}
+                                                        className="block w-full text-sm text-gray-500
+                                                        file:mr-4 file:py-2 file:px-4
+                                                        file:rounded-full file:border-0
+                                                        file:text-sm file:font-semibold
+                                                        file:bg-indigo-50 file:text-indigo-700
+                                                        hover:file:bg-indigo-100"
+                                                    />
+                                                    {slipFile && (
+                                                        <p className="mt-2 text-xs text-green-600 font-medium">
+                                                            ✓ {slipFile.name}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Note */}
+                                            <div className="mb-2">
+                                                <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">
+                                                    หมายเหตุ (ถ้ามี)
+                                                </label>
+                                                <textarea
+                                                    id="note"
+                                                    rows="2"
+                                                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                                                    placeholder="เช่น โอนเข้าบัญชีบริษัท..."
+                                                    value={settleNote}
+                                                    onChange={(e) => setSettleNote(e.target.value)}
+                                                ></textarea>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -244,8 +350,8 @@ const InternalRevenueTab = () => {
                                 <button
                                     type="button"
                                     onClick={handleSettle}
-                                    disabled={isSettling}
-                                    className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm ${isSettling ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    disabled={isSettling || !slipFile}
+                                    className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm ${isSettling || !slipFile ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
                                     {isSettling ? 'กำลังดำเนินการ...' : 'ยืนยันการชำระเงิน'}
                                 </button>
@@ -264,6 +370,41 @@ const InternalRevenueTab = () => {
             )}
         </div>
     );
+};
+
+// Helper: Compress Image
+const compressImage = (file) => {
+    return new Promise((resolve) => {
+        const maxWidth = 1200;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    }));
+                }, 'image/jpeg', 0.8);
+            };
+        };
+    });
 };
 
 export default InternalRevenueTab;
