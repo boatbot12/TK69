@@ -548,8 +548,11 @@ class ProfileUpdateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
     
     @transaction.atomic
+    def post(self, request):
+        return self.put(request)
+
+    @transaction.atomic
     def put(self, request):
-        # Check if user has a profile
         if not hasattr(request.user, 'profile'):
             return Response(
                 {'error': 'no_profile', 'message': 'Profile not found'},
@@ -557,173 +560,80 @@ class ProfileUpdateView(APIView):
             )
         
         profile = request.user.profile
-        data = request.data
-            
-        print(f"[ProfileUpdate] User: {request.user.id}, Method: {request.method}")
-        print(f"[ProfileUpdate] allow_boost in data: {'allow_boost' in data}")
-        print(f"[ProfileUpdate] boost_price in data: {'boost_price' in data}")
+        from .serializers import ProfileUpdateSerializer
         
-        # Helper to parse boolean from string
-        def parse_bool(value):
-            if value is None: return False
-            if isinstance(value, bool):
-                return value
-            if isinstance(value, str):
-                return value.lower() in ('true', '1', 'yes')
-            return bool(value)
-        
-        # Update basic fields
-        if 'full_name_th' in data:
-            profile.full_name_th = data['full_name_th']
-        if 'phone' in data:
-            profile.phone = data['phone']
-        if 'email' in data:
-            profile.email = data.get('email', '')
-        if 'date_of_birth' in data:
-            profile.date_of_birth = data['date_of_birth']
-        
-        # Update address fields
-        if 'house_no' in data:
-            profile.house_no = data['house_no']
-        if 'village' in data:
-            profile.village = data.get('village', '')
-        if 'moo' in data:
-            profile.moo = data.get('moo', '')
-        if 'soi' in data:
-            profile.soi = data.get('soi', '')
-        if 'road' in data:
-            profile.road = data.get('road', '')
-        if 'sub_district' in data:
-            profile.sub_district = data['sub_district']
-        if 'district' in data:
-            profile.district = data['district']
-        if 'province' in data:
-            profile.province = data['province']
-        if 'zipcode' in data:
-            profile.zipcode = data['zipcode']
-        
-        # Update work conditions (parse booleans and decimals)
-        if 'allow_boost' in data:
-            profile.allow_boost = parse_bool(data.get('allow_boost'))
-            print(f"[ProfileUpdate] Updated allow_boost to: {profile.allow_boost}")
-        
-        if 'boost_price' in data:
-            val = data.get('boost_price')
-            try:
-                profile.boost_price = Decimal(str(val)) if str(val).strip() != '' else None
-                print(f"[ProfileUpdate] Updated boost_price to: {profile.boost_price}")
-            except:
-                print(f"[ProfileUpdate] FAILED to update boost_price with value: {val}")
+        serializer = ProfileUpdateSerializer(profile, data=request.data, partial=True)
+        if not serializer.is_valid():
+            print(f"[ProfileUpdate] Validation Errors: {serializer.errors}")
+            return Response({
+                'success': False,
+                'message': 'ข้อมูลไม่ถูกต้อง',
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        if 'allow_original_file' in data:
-            profile.allow_original_file = parse_bool(data.get('allow_original_file'))
-            print(f"[ProfileUpdate] Updated allow_original_file to: {profile.allow_original_file}")
-            
-        if 'original_file_price' in data:
-            val = data.get('original_file_price')
-            try:
-                profile.original_file_price = Decimal(str(val)) if str(val).strip() != '' else None
-                print(f"[ProfileUpdate] Updated original_file_price to: {profile.original_file_price}")
-            except:
-                print(f"[ProfileUpdate] FAILED to update original_file_price with value: {val}")
+        # Validate mandatory documents (FRONTEND already ensures this, but BACKEND is the source of truth)
+        has_id = bool(profile.id_card_front) or 'id_card_front' in request.FILES
+        has_bank = bool(profile.bank_book) or 'bank_book' in request.FILES
         
-        if 'accept_gifted_video' in data:
-            profile.accept_gifted_video = parse_bool(data.get('accept_gifted_video'))
-        if 'accept_affiliate' in data:
-            profile.accept_affiliate = parse_bool(data.get('accept_affiliate'))
-        
-        # Validate that ID Card and Bank Book are present (mandatory)
-        # Check files in request or existing on profile
-        has_id_card = 'id_card_front' in request.FILES or bool(profile.id_card_front)
-        has_bank_book = 'bank_book' in request.FILES or bool(profile.bank_book)
+        if not has_id or not has_bank:
+            return Response({
+                'success': False,
+                'message': 'บัตรประชาชนและหน้าสมุดบัญชีเป็นข้อมูลที่จำเป็น',
+                'details': {'id_card_front': not has_id, 'bank_book': not has_bank}
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        if not has_id_card or not has_bank_book:
-            return Response(
-                {
-                    'error': 'mandatory_documents_required',
-                    'message': 'บัตรประชาชนและหน้าสมุดบัญชีเป็นข้อมูลที่จำเป็น',
-                    'details': {
-                        'id_card_front': not has_id_card,
-                        'bank_book': not has_bank_book
-                    }
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Handle file uploads (if provided)
-        if 'id_card_front' in request.FILES:
-            profile.id_card_front = request.FILES['id_card_front']
-        if 'bank_book' in request.FILES:
-            profile.bank_book = request.FILES['bank_book']
-        
-        profile.save()
+        # Save profile
+        profile = serializer.save()
         profile.refresh_from_db()
-        request.user.refresh_from_db()
-        
-        # Update interests if provided
-        if 'interests' in data:
-            import json
-            interest_ids = data.get('interests', [])
-            if isinstance(interest_ids, str):
-                try:
-                    interest_ids = json.loads(interest_ids)
-                except:
-                    interest_ids = []
-            interests = Interest.objects.filter(id__in=interest_ids)
-            profile.interests.set(interests)
 
-        # Update Social Accounts (Batch Save)
-        if 'social_accounts' in data:
+        # Handle Interests (from serializer validated_data or request.data)
+        interests_data = request.data.get('interests')
+        if interests_data:
             import json
-            social_data = data.get('social_accounts', [])
-            if isinstance(social_data, str):
-                try:
+            try:
+                if isinstance(interests_data, str):
+                    interests_data = json.loads(interests_data)
+                interests = Interest.objects.filter(id__in=interests_data)
+                profile.interests.set(interests)
+            except Exception as e:
+                print(f"[ProfileUpdate] Interest error: {e}")
+
+        # Handle Social Accounts
+        social_data = request.data.get('social_accounts')
+        if social_data:
+            import json
+            try:
+                if isinstance(social_data, str):
                     social_data = json.loads(social_data)
-                except:
-                    social_data = []
-            
-            # Use a list of platforms processed to handle deletions if needed
-            # For now, we just update/create. If user deleted from UI, frontend should send the list without it?
-            # Or we can sync: delete any platform NOT in this list?
-            # Let's assume the frontend sends the COMPLETE active list.
-            
-            processed_platforms = []
-            
-            for acc in social_data:
-                platform = acc.get('platform')
-                if not platform: continue
                 
-                # Normalize manual data
-                followers = acc.get('followers_count', 0)
-                try:
-                    followers = int(float(str(followers).replace(',', '')))
-                except:
-                    followers = 0
+                processed_platforms = []
+                for acc in social_data:
+                    platform = acc.get('platform')
+                    if not platform: continue
+                    
+                    followers = acc.get('followers_count', 0)
+                    try:
+                        followers = int(float(str(followers).replace(',', '')))
+                    except:
+                        followers = 0
+                        
+                    SocialPlatformAccount.objects.update_or_create(
+                        user=request.user,
+                        platform=platform,
+                        defaults={
+                            'username': acc.get('username', 'User'),
+                            'profile_url': acc.get('profile_url', acc.get('link', '')),
+                            'followers_count': followers
+                        }
+                    )
+                    processed_platforms.append(platform)
                 
-                username = acc.get('username', '')
-                profile_url = acc.get('profile_url', acc.get('link', ''))  # Handle 'link' alias
-                
-                # Check for duplicate platform for this user
-                social_obj, created = SocialPlatformAccount.objects.update_or_create(
-                    user=request.user,
-                    platform=platform,
-                    defaults={
-                        'username': username or "User",
-                        'profile_url': profile_url,
-                        'followers_count': followers,
-                        # Reset verified if modified manually? user choice. Let's keep existing if not provided.
-                        # 'is_verified': acc.get('is_verified', False) 
-                    }
-                )
-                processed_platforms.append(platform)
-                
-            # Optional: Delete accounts not in the list? 
-            # If the user sends an empty list, it deletes all? 
-            # Yes, if we trust the frontend sends the full state.
-            # Only do this if social_accounts was actually provided
-            if isinstance(social_data, list):
-                 SocialPlatformAccount.objects.filter(user=request.user).exclude(platform__in=processed_platforms).delete()
-        
+                # Sync: Delete accounts not in list
+                SocialPlatformAccount.objects.filter(user=request.user).exclude(platform__in=processed_platforms).delete()
+            except Exception as e:
+                print(f"[ProfileUpdate] Social error: {e}")
+
+        request.user.refresh_from_db()
         return Response({
             'success': True,
             'message': 'Profile updated successfully',

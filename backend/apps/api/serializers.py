@@ -447,6 +447,40 @@ class InfluencerApprovalSerializer(serializers.ModelSerializer):
         return matches
 
 
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating influencer profile."""
+    interests = serializers.ListField(child=serializers.CharField(), required=False)
+    social_accounts = serializers.JSONField(required=False)
+    
+    class Meta:
+        model = InfluencerProfile
+        fields = [
+            'full_name_th', 'phone', 'email', 'date_of_birth',
+            'house_no', 'village', 'moo', 'soi', 'road',
+            'sub_district', 'district', 'province', 'zipcode',
+            'allow_boost', 'boost_price', 'allow_original_file', 'original_file_price',
+            'accept_gifted_video', 'accept_affiliate',
+            'id_card_front', 'bank_book', 'interests', 'social_accounts'
+        ]
+        extra_kwargs = {
+            'id_card_front': {'required': False},
+            'bank_book': {'required': False},
+        }
+
+    def update(self, instance, validated_data):
+        # We handle interests and social_accounts in the view for now 
+        # to match existing complex logic, but we could move it here later.
+        interests_data = validated_data.pop('interests', None)
+        social_data = validated_data.pop('social_accounts', None)
+        
+        # Standard fields update
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
+
+
 class CampaignCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating campaigns (Admin only)."""
     
