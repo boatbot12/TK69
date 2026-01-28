@@ -161,13 +161,17 @@ const EditProfile = () => {
             // Interests
             formData.append('interests', JSON.stringify(interests))
 
-            // Social & Pricing
-            formData.append('allow_boost', socialAndPricing.allowBoost)
-            if (socialAndPricing.allowBoost && socialAndPricing.boostPrice) {
+            // Work Conditions (Improved logic: if price is set, allow is implied)
+            const hasBoost = socialAndPricing.boostPrice !== '' && socialAndPricing.boostPrice !== null
+            const hasOriginalFile = socialAndPricing.originalFilePrice !== '' && socialAndPricing.originalFilePrice !== null
+
+            formData.append('allow_boost', hasBoost)
+            if (hasBoost) {
                 formData.append('boost_price', socialAndPricing.boostPrice)
             }
-            formData.append('allow_original_file', socialAndPricing.allowOriginalFile)
-            if (socialAndPricing.allowOriginalFile && socialAndPricing.originalFilePrice) {
+
+            formData.append('allow_original_file', hasOriginalFile)
+            if (hasOriginalFile) {
                 formData.append('original_file_price', socialAndPricing.originalFilePrice)
             }
 

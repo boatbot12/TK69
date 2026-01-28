@@ -58,16 +58,16 @@ const Register = () => {
             const interestIds = interests.map(i => (typeof i === 'object' && i !== null) ? i.id : i).filter(Boolean)
             console.log('[Register] Submitting interests:', interestIds)
             formData.append('interests', JSON.stringify(interestIds))
-            // Work Conditions (now optional pricing - if price is set, allow is implied)
-            const hasBoostPrice = workConditions.boostPrice && parseFloat(workConditions.boostPrice) > 0
-            const hasOriginalFilePrice = workConditions.originalFilePrice && parseFloat(workConditions.originalFilePrice) > 0
+            // Work Conditions (Improved logic: if price is set, allow is implied)
+            const hasBoost = workConditions.boostPrice !== '' && workConditions.boostPrice !== null
+            const hasOriginalFile = workConditions.originalFilePrice !== '' && workConditions.originalFilePrice !== null
 
-            formData.append('allow_boost', hasBoostPrice ? 'true' : 'false')
-            if (hasBoostPrice) {
+            formData.append('allow_boost', hasBoost ? 'true' : 'false')
+            if (hasBoost) {
                 formData.append('boost_price', workConditions.boostPrice)
             }
-            formData.append('allow_original_file', hasOriginalFilePrice ? 'true' : 'false')
-            if (hasOriginalFilePrice) {
+            formData.append('allow_original_file', hasOriginalFile ? 'true' : 'false')
+            if (hasOriginalFile) {
                 formData.append('original_file_price', workConditions.originalFilePrice)
             }
 

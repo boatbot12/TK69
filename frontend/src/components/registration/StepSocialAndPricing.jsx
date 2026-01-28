@@ -95,7 +95,9 @@ const PLATFORMS = [
 
 const StepSocialAndPricing = ({ data, onChange, onNext, onBack }) => {
     const {
+        allowBoost,
         boostPrice,
+        allowOriginalFile,
         originalFilePrice,
         socialAccounts = [],
         acceptGiftedVideo = false,
@@ -640,7 +642,14 @@ const StepSocialAndPricing = ({ data, onChange, onNext, onBack }) => {
                                         placeholder="0.00"
                                         className="w-full bg-white/80 backdrop-blur border-2 border-gray-100 focus:border-primary-400 focus:bg-white rounded-2xl py-4 px-10 text-xl font-black text-gray-800 placeholder:text-gray-300 outline-none transition-all shadow-inner"
                                         value={boostPrice || ''}
-                                        onChange={e => updateField('boostPrice', e.target.value)}
+                                        onChange={e => {
+                                            const val = e.target.value
+                                            onChange({
+                                                ...data,
+                                                boostPrice: val,
+                                                allowBoost: val !== '' && val !== null
+                                            })
+                                        }}
                                     />
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-black text-gray-400 tracking-tighter">฿</span>
                                     {(!boostPrice || parseFloat(boostPrice) === 0) && (
@@ -665,7 +674,14 @@ const StepSocialAndPricing = ({ data, onChange, onNext, onBack }) => {
                                         placeholder="0.00"
                                         className="w-full bg-white/80 backdrop-blur border-2 border-gray-100 focus:border-primary-400 focus:bg-white rounded-2xl py-4 px-10 text-xl font-black text-gray-800 placeholder:text-gray-300 outline-none transition-all shadow-inner"
                                         value={originalFilePrice || ''}
-                                        onChange={e => updateField('originalFilePrice', e.target.value)}
+                                        onChange={e => {
+                                            const val = e.target.value
+                                            onChange({
+                                                ...data,
+                                                originalFilePrice: val,
+                                                allowOriginalFile: val !== '' && val !== null
+                                            })
+                                        }}
                                     />
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-black text-gray-400 tracking-tighter">฿</span>
                                     {(!originalFilePrice || parseFloat(originalFilePrice) === 0) && (
