@@ -613,6 +613,24 @@ class ProfileUpdateView(APIView):
         if 'accept_affiliate' in data:
             profile.accept_affiliate = parse_bool(data.get('accept_affiliate', False))
         
+        # Validate that ID Card and Bank Book are present (mandatory)
+        # Check files in request or existing on profile
+        has_id_card = 'id_card_front' in request.FILES or bool(profile.id_card_front)
+        has_bank_book = 'bank_book' in request.FILES or bool(profile.bank_book)
+
+        if not has_id_card or not has_bank_book:
+            return Response(
+                {
+                    'error': 'mandatory_documents_required',
+                    'message': 'บัตรประชาชนและหน้าสมุดบัญชีเป็นข้อมูลที่จำเป็น',
+                    'details': {
+                        'id_card_front': not has_id_card,
+                        'bank_book': not has_bank_book
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # Handle file uploads (if provided)
         if 'id_card_front' in request.FILES:
             profile.id_card_front = request.FILES['id_card_front']

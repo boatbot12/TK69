@@ -16,14 +16,16 @@ const InputGroup = ({ label, required, children }) => (
     </div>
 )
 
-const FileUpload = ({ label, field, icon, files, onFileChange, existingUrl }) => {
+const FileUpload = ({ label, required, field, icon, files, onFileChange, existingUrl }) => {
     const hasNewFile = files[field]
     const hasExisting = existingUrl && !hasNewFile
     const hasAnyFile = hasNewFile || hasExisting
 
     return (
         <div className="mb-4">
-            <label className="text-gray-900 font-bold mb-2 ml-1 block text-sm">{label}</label>
+            <label className="text-gray-900 font-bold mb-2 ml-1 block text-sm">
+                {label} {required && <span className="text-rose-500">*</span>}
+            </label>
             <div className={`
                 relative overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300
                 ${hasAnyFile ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-primary-300'}
@@ -86,7 +88,8 @@ const StepPersonalInfo = ({ data, onChange, onSubmit, onBack, isSubmitting, isEd
         data.zipcode &&
         data.subDistrict &&
         data.province &&
-        (isEditMode || (files?.idCardFront && files?.bankBook)) &&
+        (files?.idCardFront || existingDocuments?.idCardFrontUrl) &&
+        (files?.bankBook || existingDocuments?.bankBookUrl) &&
         agreedToPolicy
     )
 
@@ -101,7 +104,8 @@ const StepPersonalInfo = ({ data, onChange, onSubmit, onBack, isSubmitting, isEd
                 zipcode: !data.zipcode,
                 subDistrict: !data.subDistrict,
                 province: !data.province,
-                files: !(isEditMode || (files.idCardFront && files.bankBook)),
+                idCardFront: !(files?.idCardFront || existingDocuments?.idCardFrontUrl),
+                bankBook: !(files?.bankBook || existingDocuments?.bankBookUrl),
                 policy: !agreedToPolicy
             })
         }
@@ -272,8 +276,8 @@ const StepPersonalInfo = ({ data, onChange, onSubmit, onBack, isSubmitting, isEd
                         <span className="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center text-sm">📁</span>
                         เอกสารสำคัญ
                     </h3>
-                    <FileUpload label="บัตรประชาชน (หน้า)" field="idCardFront" icon="🪪" files={files} onFileChange={onFileChange} existingUrl={existingDocuments.idCardFrontUrl} />
-                    <FileUpload label="หน้าสมุดบัญชี" field="bankBook" icon="🏦" files={files} onFileChange={onFileChange} existingUrl={existingDocuments.bankBookUrl} />
+                    <FileUpload label="บัตรประชาชน (หน้า)" required field="idCardFront" icon="🪪" files={files} onFileChange={onFileChange} existingUrl={existingDocuments.idCardFrontUrl} />
+                    <FileUpload label="หน้าสมุดบัญชี" required field="bankBook" icon="🏦" files={files} onFileChange={onFileChange} existingUrl={existingDocuments.bankBookUrl} />
                 </div>
 
                 {/* Agreement Checkbox */}

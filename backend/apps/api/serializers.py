@@ -132,8 +132,12 @@ class RegistrationSerializer(serializers.Serializer):
     )
     
     # Files
-    id_card_front = serializers.ImageField()
-    bank_book = serializers.ImageField()
+    id_card_front = serializers.ImageField(
+        error_messages={'required': 'กรุณาอัปโหลดรูปบัตรประชาชน'}
+    )
+    bank_book = serializers.ImageField(
+        error_messages={'required': 'กรุณาอัปโหลดรูปหน้าสมุดบัญชี'}
+    )
     
     def validate(self, data):
         """Custom validation."""
