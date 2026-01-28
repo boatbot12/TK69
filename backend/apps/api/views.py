@@ -556,10 +556,25 @@ class ProfileUpdateView(APIView):
             )
         
         profile = request.user.profile
-        data = request.data
+        
+        # Robust Data Extraction
+        if hasattr(request.data, 'getlist'):
+            # Use a dict but manually extract lists that we care about
+            data = request.data.dict()
+            if 'interests' in request.data:
+                data['interests'] = request.data.get('interests')
+            if 'social_accounts' in request.data:
+                data['social_accounts'] = request.data.get('social_accounts')
+        else:
+            data = request.data
+            
+        print(f"[ProfileUpdate] User: {request.user.id}, Method: {request.method}")
+        print(f"[ProfileUpdate] Received keys: {list(data.keys())}")
+        print(f"[ProfileUpdate] allow_boost: {data.get('allow_boost')}, boost_price: {data.get('boost_price')}")
         
         # Helper to parse boolean from string
         def parse_bool(value):
+            if value is None: return False
             if isinstance(value, bool):
                 return value
             if isinstance(value, str):
@@ -638,6 +653,8 @@ class ProfileUpdateView(APIView):
             profile.bank_book = request.FILES['bank_book']
         
         profile.save()
+        profile.refresh_from_db()
+        request.user.refresh_from_db()
         
         # Update interests if provided
         if 'interests' in data:
@@ -706,6 +723,12 @@ class ProfileUpdateView(APIView):
         return Response({
             'success': True,
             'message': 'Profile updated successfully',
+            'debug_info': {
+                'allow_boost': profile.allow_boost,
+                'boost_price': str(profile.boost_price),
+                'allow_original_file': profile.allow_original_file,
+                'original_file_price': str(profile.original_file_price)
+            },
             'user': UserWithProfileSerializer(request.user, context={'request': request}).data
         })
 
