@@ -1,0 +1,28 @@
+.gcloudignore
+.git
+.gitignore
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment folders
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Local static/media
+staticfiles/
+media/
+db.sqlite3
+
+# Deployment artifacts (MUST NOT BE IGNORED for Docker build)
+#!Dockerfile
+#!.dockerignore
+passenger_wsgi.py
+.DS_Store

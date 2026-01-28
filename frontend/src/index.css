@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================
+   Gen Z / Modern Youthful Design
+   Vibrant Teal-Blue Theme ⚡️
+   ================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Electric Teal & Cyan Gradient Palette */
+  --primary-50: #f0fdfa;
+  --primary-100: #ccfbf1;
+  --primary-200: #99f6e4;
+  --primary-300: #5eead4;
+  /* Bright Pop */
+  --primary-400: #2dd4bf;
+  /* Main Brand */
+  --primary-500: #14b8a6;
+  --primary-600: #0d9488;
+  --primary-bright: #00f5d4;
+  /* Neon Teal Accent */
+
+  /* Electric Blue Accents */
+  --accent-blue: #0ea5e9;
+  --accent-electric: #38bdf8;
+  --accent-purple: #a855f7;
+  /* Subtle fun mix */
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+
+  /* Backgrounds */
+  --bg-gradient-start: #f8fafc;
+  --bg-gradient-end: #f0fdfa;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+  /* Cleaner, friendlier font */
+}
+
+body {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(45, 212, 191, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(45, 212, 191, 0.1) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* Fun Selection Color */
+::selection {
+  background: var(--primary-300);
+  color: var(--primary-900);
+}
+
+/* ================================
+   Bouncy & Fun Components
+   ================================ */
+
+@layer components {
+
+  /* Bubbly Primary Button */
+  .btn-primary {
+    @apply relative px-8 py-4 font-bold text-white rounded-2xl overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:grayscale;
+    background: linear-gradient(135deg, #2dd4bf 0%, #0ea5e9 100%);
+    /* Brighter Gradient */
+    box-shadow: 0 10px 20px -5px rgba(45, 212, 191, 0.4),
+      0 4px 6px -2px rgba(14, 165, 233, 0.2);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -5px rgba(45, 212, 191, 0.5),
+      0 10px 10px -5px rgba(14, 165, 233, 0.3);
+    filter: brightness(1.05);
+    /* Make it pop */
+  }
+
+  /* Soft Secondary Button */
+  .btn-secondary {
+    @apply px-8 py-4 font-bold rounded-2xl bg-white text-gray-600 transition-all duration-300 border-2 border-transparent hover:border-gray-200 hover:text-gray-800 hover:bg-gray-50 disabled:opacity-50 active:scale-95;
+    box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Glassy Card - More transparent */
+  .card {
+    @apply bg-white/70 backdrop-blur-xl rounded-3xl p-6 border border-white/60;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  }
+
+  /* Bubbly Input */
+  .input-field {
+    @apply w-full px-6 py-4 bg-white/60 backdrop-blur-md rounded-2xl font-medium border-2 border-transparent text-gray-800 outline-none transition-all duration-300 placeholder:text-gray-400 focus:bg-white focus:border-teal-400 focus:ring-4 focus:ring-teal-400/20;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  }
+
+  /* Fun Selection Card (for interests) */
+  .selection-card {
+    @apply relative rounded-3xl transition-all duration-300 cursor-pointer border-2 border-transparent bg-white/60 backdrop-blur-sm hover:bg-white hover:scale-[1.02] active:scale-95;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  }
+
+  .selection-card.selected {
+    @apply bg-white border-teal-400;
+    box-shadow: 0 12px 30px -8px rgba(45, 212, 191, 0.4);
+  }
+}
+
+/* ================================
+   Modern Utilities & Animations
+   ================================ */
+
+.text-gradient {
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Smooth Spring Animations */
+.animate-spring-up {
+  animation: springUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes springUp {
+  0% {
+    transform: translateY(20px) scale(0.9);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop {
+  animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animated Background Blob */
+.bg-blob {
+  position: fixed;
+  filter: blur(80px);
+  z-index: -1;
+  opacity: 0.6;
+  animation: float 10s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(10px, -10px);
+  }
+
+  50% {
+    transform: translate(-5px, 10px);
+  }
+
+  75% {
+    transform: translate(-10px, -5px);
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

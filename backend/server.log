@@ -1,0 +1,16 @@
+Watching for file changes with StatReloader
+/Users/tanapatsriautarawong/Influencer Project 4/backend/apps/users/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+January 21, 2026 - 04:31:47
+Django version 4.2.27, using settings 'config.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CONTROL-C.
+
+Fatal Python error: init_sys_streams: can't initialize sys standard streams
+Python runtime state: core initialized
+OSError: [Errno 9] Bad file descriptor
+
+Current thread 0x000000020772a080 (most recent call first):
+  <no Python frame>

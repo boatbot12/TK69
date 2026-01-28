@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.env.local
+.env.production
+.env.production.local
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Local data
+db.sqlite3
+media/
+staticfiles/
+seed_media/
+env.yaml
