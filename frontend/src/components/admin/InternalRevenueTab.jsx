@@ -256,8 +256,17 @@ const InternalRevenueTab = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-400 text-sm">
-                                        ยังไม่มีประวัติการชำระเงิน
+                                    <td colSpan="6" className="px-6 py-20 text-center">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-4 animate-bounce-slow">
+                                                <span className="text-5xl">✨</span>
+                                            </div>
+                                            <h3 className="text-lg font-bold text-gray-900 mb-1">ยังไม่มีรายการชำระเงิน</h3>
+                                            <p className="text-gray-500 text-sm">
+                                                ประวัติการชำระค่าธรรมเนียมจะปรากฏที่นี่<br />
+                                                เมื่อคุณเริ่มทำธุรกรรมครั้งแรก...
+                                            </p>
+                                        </div>
                                     </td>
                                 </tr>
                             )}
